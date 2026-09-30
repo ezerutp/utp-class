@@ -15,8 +15,12 @@ Frontend en React + TypeScript + Vite para el campus virtual de la UTP (`class.u
 - **Calendario** — vista mensual con clases de Zoom y fechas de entrega de tareas, foros y
   evaluaciones.
 - **Actividades** — listado de tareas, foros y evaluaciones con filtros por estado.
+- **Calificaciones** — promedio general y notas de todos los cursos del periodo, con filtros por tipo.
+- **Mensajes** — conversaciones con tus docentes: enviar mensajes, iniciar chats nuevos y
+  previsualizar adjuntos (imágenes, PDF, video, audio y documentos de Office).
+- **Messenger flotante** — botón con el conteo de no leídos que abre tus chats desde cualquier página.
 
-Aún en construcción: Calificaciones, Mensajes, Recursos y Configuración.
+Aún en construcción: Recursos y Configuración.
 
 ## Capturas
 
@@ -59,6 +63,22 @@ Aún en construcción: Calificaciones, Mensajes, Recursos y Configuración.
 ### Actividades
 
 ![Actividades](capturas/10-actividades.png)
+
+### Calificaciones
+
+![Calificaciones](capturas/11-calificaciones.png)
+
+### Mensajes
+
+![Mensajes](capturas/12-mensajes.png)
+
+### Vista previa de adjuntos
+
+![Vista previa de adjuntos](capturas/13-vista-previa-adjunto.png)
+
+### Messenger flotante
+
+![Messenger flotante](capturas/14-messenger-flotante.png)
 
 ## Stack
 

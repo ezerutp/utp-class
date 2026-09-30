@@ -392,3 +392,47 @@ export interface Announcement {
     email: string;
   };
 }
+
+// --- Mensajes ------------------------------------------------------------------
+
+export interface ChatUser {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  picture: string | null;
+  commonSectionsNumber?: number;
+  commonCoursesList?: unknown[];
+}
+
+// GET /communication/student/message/from/{u}?page=N&filter=all
+export interface Chat {
+  id: string;
+  userIdFrom: string;
+  userIdTo: string;
+  lastReceivedAt: string;
+  countUnread: number;
+  lastMessage: string;
+  /** La otra persona de la conversacion. */
+  to: ChatUser;
+}
+
+// GET /communication/student/message/from/{u}/to/{otro}?page=N  (pagina 1 = mas recientes)
+export interface ChatMessage {
+  id: string;
+  messageId: string;
+  userIdFrom: string;
+  userIdTo: string;
+  createdAt: string;
+  message: string;
+  fileName: string;
+  fileUrl: string;
+  withFile: boolean;
+}
+
+// GET /user/users/{id}
+export interface UserInfo {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  picture: string | null;
+}

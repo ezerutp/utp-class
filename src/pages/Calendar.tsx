@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   CalendarX,
   ChevronLeft,
@@ -8,6 +8,8 @@ import {
   FlaskConical,
   ListChecks,
   MessagesSquare,
+  PanelRightClose,
+  PanelRightOpen,
   Play,
   Video,
   type LucideIcon,
@@ -583,6 +585,8 @@ export function Calendar() {
   const [weekStart, setWeekStart] = useState(() => startOfWeek(today));
   const [selected, setSelected] = useState(() => dayKey(today));
   const [active, setActive] = useState<Set<EventKind>>(() => new Set(KINDS));
+  // Panel lateral con los eventos del dia: oculto por defecto para que el calendario use todo el ancho.
+  const [panelOpen, setPanelOpen] = useState(false);
 
   // Si no hay eventos en el periodo visible, abrir el mes/semana del evento mas cercano.
   useEffect(() => {
@@ -646,6 +650,7 @@ export function Calendar() {
     setMonth(startOfMonth(today));
     setWeekStart(startOfWeek(today));
     setSelected(todayKey);
+    setPanelOpen(true);
   };
   const toggle = (k: EventKind) =>
     setActive((s) => {
@@ -702,6 +707,19 @@ export function Calendar() {
           <Button size="sm" variant="secondary" onClick={goToday}>
             Hoy
           </Button>
+          <button
+            onClick={() => setPanelOpen((o) => !o)}
+            aria-pressed={panelOpen}
+            aria-label={panelOpen ? 'Ocultar eventos del día' : 'Mostrar eventos del día'}
+            title={panelOpen ? 'Ocultar eventos del día' : 'Mostrar eventos del día'}
+            className={`grid size-[42px] place-items-center rounded-xl border transition-colors cursor-pointer ${
+              panelOpen
+                ? 'border-brand-500/40 bg-brand-600/10 text-brand-600 dark:text-brand-300'
+                : 'border-[var(--border-strong)] bg-surface text-fg-muted hover:text-fg'
+            }`}
+          >
+            {panelOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
+          </button>
           <div className="flex items-center gap-1 rounded-xl border border-[var(--border-strong)] bg-surface p-1">
             <button
               onClick={() => shift(-1)}
@@ -745,7 +763,7 @@ export function Calendar() {
         })}
       </div>
 
-      <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_310px]">
+      <div className={`mt-4 grid gap-5 ${panelOpen ? 'xl:grid-cols-[minmax(0,1fr)_310px]' : ''}`}>
         {view === 'month' ? (
           <MonthView
             month={month}
@@ -766,27 +784,38 @@ export function Calendar() {
           />
         )}
 
-        <aside className="xl:sticky xl:top-4 xl:self-start">
-          <div className="rounded-2xl border border-[var(--border)] bg-surface p-4 card-shadow">
-            <div className="text-[11px] font-bold uppercase tracking-wide text-fg-faint">
-              {selected === todayKey ? 'Hoy' : 'Día seleccionado'}
-            </div>
-            <div className="mt-0.5 text-[16px] font-bold">
-              {cap(selectedDate.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' }))}
-            </div>
-
-            <div className="mt-3 space-y-2.5">
-              {selectedEvents.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[var(--border-strong)] py-8 text-center text-[13px] text-fg-faint">
-                  <CalendarX size={22} />
-                  Sin eventos este día
+        <AnimatePresence initial={false}>
+          {panelOpen && (
+            <motion.aside
+              key="day-panel"
+              initial={{ opacity: 0, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 12 }}
+              transition={{ duration: 0.2, ease: EASE_OUT }}
+              className="xl:sticky xl:top-4 xl:self-start"
+            >
+              <div className="rounded-2xl border border-[var(--border)] bg-surface p-4 card-shadow">
+                <div className="text-[11px] font-bold uppercase tracking-wide text-fg-faint">
+                  {selected === todayKey ? 'Hoy' : 'Día seleccionado'}
                 </div>
-              ) : (
-                selectedEvents.map((e) => <EventCard key={e.id} e={e} onOpen={() => open(e)} />)
-              )}
-            </div>
-          </div>
-        </aside>
+                <div className="mt-0.5 text-[16px] font-bold">
+                  {cap(selectedDate.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' }))}
+                </div>
+
+                <div className="mt-3 space-y-2.5">
+                  {selectedEvents.length === 0 ? (
+                    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[var(--border-strong)] py-8 text-center text-[13px] text-fg-faint">
+                      <CalendarX size={22} />
+                      Sin eventos este día
+                    </div>
+                  ) : (
+                    selectedEvents.map((e) => <EventCard key={e.id} e={e} onOpen={() => open(e)} />)
+                  )}
+                </div>
+              </div>
+            </motion.aside>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

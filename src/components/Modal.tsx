@@ -1,9 +1,9 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { EASE_OUT } from '../lib/motion';
 
-const SIZES = { md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-3xl' } as const;
+const SIZES = { md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-3xl', full: 'max-w-6xl' } as const;
 
 export function Modal({
   open,
@@ -17,9 +17,16 @@ export function Modal({
   onClose: () => void;
   title?: ReactNode;
   subtitle?: ReactNode;
-  size?: 'md' | 'lg' | 'xl';
+  size?: keyof typeof SIZES;
   children: ReactNode;
 }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
   return (
     <AnimatePresence>
       {open && (

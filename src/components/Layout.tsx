@@ -6,6 +6,7 @@ import { useAuth } from '../lib/auth';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationsBell } from './NotificationsBell';
 import { SidebarNav } from './Sidebar';
+import { FloatingMessenger } from './FloatingMessenger';
 import { EASE_OUT } from '../lib/motion';
 
 function initials(name: string) {
@@ -178,6 +179,7 @@ export function Layout() {
           <Outlet />
         </main>
       </div>
+      <FloatingMessenger />
     </div>
   );
 }

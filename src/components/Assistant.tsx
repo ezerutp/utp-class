@@ -21,6 +21,7 @@ import { answerLocally, type Answer, type AssistantTab } from '../lib/assistantT
 import { GradesCard } from './GradesCard';
 import { Markdown } from './Markdown';
 import { spring, EASE_OUT } from '../lib/motion';
+import { announceFloatOpen, onOtherFloatOpen } from '../lib/floating';
 
 interface Msg {
   id: number;
@@ -68,6 +69,7 @@ export function Assistant({
   const { send } = useAssistant();
   const api = useApi();
   const [open, setOpen] = useState(false);
+  useEffect(() => onOtherFloatOpen('assistant', () => setOpen(false)), []);
   const [messages, setMessages] = useState<Msg[]>([welcome(courseName)]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -124,7 +126,12 @@ export function Assistant({
   return (
     <>
       <motion.button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() =>
+          setOpen((o) => {
+            if (!o) announceFloatOpen('assistant');
+            return !o;
+          })
+        }
         aria-label={open ? 'Cerrar asistente virtual' : 'Abrir asistente virtual'}
         whileTap={{ scale: 0.94 }}
         className="fixed bottom-6 right-6 z-50 grid size-14 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-[0_10px_28px_-6px_rgba(226,0,26,0.6)] transition-shadow hover:shadow-[0_12px_32px_-6px_rgba(226,0,26,0.75)] cursor-pointer"

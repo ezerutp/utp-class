@@ -22,7 +22,7 @@ import { RangeNav, rangeOf, shiftAnchor, type RangeView } from '../components/Ra
 import { EASE_OUT } from '../lib/motion';
 import { fmtDuration } from '../lib/format';
 import { niceTitle } from '../lib/title';
-import { KIND_LABEL, dayKey, loadPeriodEvents, type CalendarEvent, type EventKind } from '../lib/calendarEvents';
+import { KIND_LABEL, dayKey, loadActivityEvents, type CalendarEvent, type EventKind } from '../lib/calendarEvents';
 import type { ActivitiesResponse, ActivityContent } from '../types/api';
 
 type ActivityKind = Exclude<EventKind, 'class'>;
@@ -248,7 +248,7 @@ function ActivityRow({
 export function Activities() {
   const api = useApi();
   const navigate = useNavigate();
-  const { data, loading, error } = useAsync(() => loadPeriodEvents(api), [api]);
+  const { data, loading, error } = useAsync(() => loadActivityEvents(api), [api]);
 
   const today = useMemo(() => new Date(), []);
   const now = today.getTime();
@@ -261,7 +261,7 @@ export function Activities() {
   const [opened, setOpened] = useState<{ e: CalendarEvent; kind: ModalKind; item: ActivityContent } | null>(null);
   const cache = useRef(new Map<string, ActivityContent[]>());
 
-  const activities = useMemo(() => (data?.events ?? []).filter((e) => e.kind !== 'class'), [data]);
+  const activities = useMemo(() => (data ?? []).filter((e) => e.kind !== 'class'), [data]);
   const [from, to] = rangeOf(view, anchor);
   const inRange = activities.filter((e) => e.date >= from && e.date < to);
   const byKind = inRange.filter((e) => kinds.has(e.kind as ActivityKind));
@@ -323,7 +323,7 @@ export function Activities() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Actividades</h1>
-          <p className="mt-1 text-sm text-fg-muted">{data.periodName}</p>
+          <p className="mt-1 text-sm text-fg-muted">Tus cursos activos</p>
         </div>
         <RangeNav
           view={view}

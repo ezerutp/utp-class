@@ -9,3 +9,5 @@ vite.config.js
 vite.config.d.ts
 index_new.html
 docs/api-reference.md
+docs/endpoints-bundle.md
+docs/endpoints-all.md

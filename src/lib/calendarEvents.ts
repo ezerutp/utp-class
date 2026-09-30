@@ -1,7 +1,6 @@
 import type { Endpoints } from './api';
 import type { DashboardCourse } from '../types/api';
 import { toDate } from './format';
-import { loadStoredPeriod, pickCurrentPeriod } from './period';
 
 export type EventKind = 'class' | 'homework' | 'evaluation' | 'forum';
 export type EventStatus = 'delivered' | 'overdue' | 'pending';
@@ -57,19 +56,42 @@ function parseDurationMin(v: string | number | null | undefined): number {
   return m >= 15 && m <= 360 ? m : 90;
 }
 
+/** Cursos que se consultan a la vez; lanzar todos juntos hace que el API corte peticiones. */
+const COURSE_CONCURRENCY = 4;
+
+/** Como Promise.all(items.map(fn)), pero con a lo mas `limit` promesas en curso. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return out;
+}
+
 /**
  * Arma los eventos del calendario con lo que ya expone la API:
  * fechas de entrega de tareas/foros/evaluaciones (contenido del curso) y clases de Zoom.
  * Un curso que falle no bloquea a los demas.
  */
-export async function loadCalendarEvents(api: Endpoints, courses: DashboardCourse[]): Promise<CalendarEvent[]> {
+export async function loadCalendarEvents(
+  api: Endpoints,
+  courses: DashboardCourse[],
+  { classes = true }: { classes?: boolean } = {},
+): Promise<CalendarEvent[]> {
   const unique = [...new Map(courses.map((c) => [c.sectionId, c] as const)).values()];
 
-  const perCourse = await Promise.all(
-    unique.map(async (c): Promise<CalendarEvent[]> => {
+  const perCourse = await mapLimit(
+    unique,
+    COURSE_CONCURRENCY,
+    async (c): Promise<CalendarEvent[]> => {
       const [full, zoom] = await Promise.allSettled([
         api.sectionFull(c.courseId, c.sectionId),
-        api.zoom(c.courseId, c.sectionId),
+        classes ? api.zoom(c.courseId, c.sectionId) : Promise.reject(),
       ]);
       const out: CalendarEvent[] = [];
       const base = { courseName: c.name, courseId: c.courseId, sectionId: c.sectionId };
@@ -120,26 +142,20 @@ export async function loadCalendarEvents(api: Endpoints, courses: DashboardCours
         }
       }
       return out;
-    }),
+    },
   );
 
   return perCourse.flat().sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
-/** Eventos de los cursos del periodo elegido en "Mis cursos" (o el vigente). */
-export async function loadPeriodEvents(api: Endpoints): Promise<{ events: CalendarEvent[]; periodName: string }> {
-  const [courses, ps] = await Promise.all([
-    api.dashboardCourses(),
-    api.academicPeriods().catch(() => ({ academicPeriods: [] })),
-  ]);
-  const periods = ps.academicPeriods ?? [];
-  const stored = loadStoredPeriod();
-  const codes = new Set(courses.map((c) => c.period));
-  const period = stored && (stored === 'all' || codes.has(stored)) ? stored : pickCurrentPeriod(courses, periods);
-  const list = period === 'all' ? courses : courses.filter((c) => c.period === period);
-  const name = periods.find((p) => p.period === period)?.name;
-  return {
-    events: await loadCalendarEvents(api, list),
-    periodName: period === 'all' ? 'Todos los periodos' : name ?? period,
-  };
+/**
+ * Actividades (tareas, foros, evaluaciones) de los cursos activos del alumno.
+ * No se filtra por periodo: la vista ya filtra por rango de fechas, y el periodo "vigente"
+ * que marca la API no siempre es el que tiene las entregas de la semana.
+ * Los cursos inactivos (ciclos pasados) se omiten: su `/full` responde 403 sin CORS.
+ */
+export async function loadActivityEvents(api: Endpoints): Promise<CalendarEvent[]> {
+  const courses = await api.dashboardCourses();
+  const active = courses.filter((c) => c.active);
+  return loadCalendarEvents(api, active.length ? active : courses, { classes: false });
 }

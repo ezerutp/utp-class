@@ -6,6 +6,8 @@ import { CourseDetail } from './pages/CourseDetail';
 import { ComingSoon } from './pages/ComingSoon';
 import { Calendar } from './pages/Calendar';
 import { Activities } from './pages/Activities';
+import { Messages } from './pages/Messages';
+import { Grades } from './pages/Grades';
 import { Layout } from './components/Layout';
 import type { ReactElement } from 'react';
 
@@ -33,14 +35,8 @@ export default function App() {
         <Route path="/courses/:courseId/sections/:sectionId" element={<CourseDetail />} />
         <Route path="/calendario" element={<Calendar />} />
         <Route path="/actividades" element={<Activities />} />
-        <Route
-          path="/calificaciones"
-          element={<ComingSoon title="Calificaciones" description="Consolidado de notas de todos tus cursos del periodo." />}
-        />
-        <Route
-          path="/mensajes"
-          element={<ComingSoon title="Mensajes" description="Conversaciones con tus docentes y compañeros." />}
-        />
+        <Route path="/calificaciones" element={<Grades />} />
+        <Route path="/mensajes" element={<Messages />} />
         <Route
           path="/recursos"
           element={<ComingSoon title="Recursos" description="Materiales y archivos de tus cursos." />}
